@@ -10,18 +10,23 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  file_list_t files;
+  file_list_init(&files);
+
   if (strcmp("-c", argv[1]) == 0) {
-    file_list_t files;
-    file_list_init(&files);
     for (int i = 4; i < argc; i++) {
       file_list_add(&files, argv[i]);
     }
     create_archive(argv[3], &files);
-    file_list_clear(&files);
+
   } else if (strcmp("-a", argv[1]) == 0) {
-    return 0;
+    for (int i = 4; i < argc; i++) {
+      file_list_add(&files, argv[i]);
+    }
+    append_files_to_archive(argv[3], &files);
   }
 
+  file_list_clear(&files);
   return 0;
 }
 
