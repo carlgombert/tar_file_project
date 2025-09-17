@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     create_archive(argv[3], &files);
     file_list_clear(&files);
   } else if (strcmp("-a", argv[1]) == 0) {
-    return;
+    return 0;
   }
 
   return 0;
