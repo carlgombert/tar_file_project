@@ -143,7 +143,7 @@ int create_archive(const char *archive_name, const file_list_t *files) {
         fill_tar_header(&header, file_name);
         write(fd, &header, BLOCK_SIZE);
         ssize_t bytes_read;
-        size_t total_bytes;
+        size_t total_bytes = 0;
 
         while ((bytes_read = read(input_fd, BUFFER, BLOCK_SIZE)) > 0) {
             write(fd, BUFFER, bytes_read);
