@@ -1,0 +1,9 @@
+$ tar -xvf test.tar
+tar: test.tar: Cannot open: No such file or directory
+tar: Error is not recoverable: exiting now
+$ diff -q large.bin test_cases/resources/large.bin
+$ rm -rf test_files/
+$ mkdir test_files
+$ mv large.bin test_files/
+$ exit
+exit

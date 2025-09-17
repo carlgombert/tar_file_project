@@ -1,0 +1,9 @@
+$ tar -xvf test.tar
+tar: test.tar: Cannot open: No such file or directory
+tar: Error is not recoverable: exiting now
+$ diff -q gatsby.txt test_cases/resources/gatsby.txt
+$ rm -rf test_files/
+$ mkdir test_files
+$ mv gatsby.txt test_files/
+$ exit
+exit

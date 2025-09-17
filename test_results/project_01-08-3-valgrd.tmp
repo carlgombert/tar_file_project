@@ -1,0 +1,15 @@
+==41872== Memcheck, a memory error detector
+==41872== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==41872== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==41872== Command: ./minitar -a -f test.tar gatsby.txt
+==41872== Parent PID: 41580
+==41872== 
+==41872== 
+==41872== HEAP SUMMARY:
+==41872==     in use at exit: 0 bytes in 0 blocks
+==41872==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==41872== 
+==41872== All heap blocks were freed -- no leaks are possible
+==41872== 
+==41872== For lists of detected and suppressed errors, rerun with: -s
+==41872== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
