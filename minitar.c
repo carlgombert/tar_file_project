@@ -154,13 +154,19 @@ int create_archive(const char *archive_name, const file_list_t *files) {
       total_bytes += bytes_read;
     }
 
-    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE));
+    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
     if (pad > 0) {
       memset(BUFFER, 0, BLOCK_SIZE);
       write(fd, BUFFER, pad);
     }
 
     current = current->next;
+  }
+
+  size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE));
+  if (pad > 0) {
+    memset(BUFFER, 0, BLOCK_SIZE);
+    write(fd, BUFFER, pad);
   }
 
   memset(BUFFER, 0, BLOCK_SIZE);
@@ -173,13 +179,42 @@ int create_archive(const char *archive_name, const file_list_t *files) {
 
 int append_files_to_archive(const char *archive_name,
                             const file_list_t *files) {
-  // TODO: Not yet implemented
-  // to
+  int fd = open(archive_name, O_WRONLY | O_APPEND, 0666);
+  char BUFFER[BLOCK_SIZE];
+  if (!fd) {
+    close(fd);
+    return -1;
+  }
+
+  node_t *current = files->head;
+  while (current->next != NULL) {
+    const char *file_name = current->name;
+    tar_header header;
+
+    int input_fd = open(file_name, O_RDONLY);
+
+    fill_tar_header(&header, file_name);
+    write(fd, &header, BLOCK_SIZE);
+    ssize_t bytes_read;
+    size_t total_bytes;
+
+    while ((bytes_read = read(input_fd, BUFFER, BLOCK_SIZE)) > 0) {
+      write(fd, BUFFER, bytes_read);
+      total_bytes += bytes_read;
+    }
+
+    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
+    if (pad > 0) {
+      memset(BUFFER, 0, BLOCK_SIZE);
+      write(fd, BUFFER, pad);
+    }
+
+    current = current->next;
+  }
   return 0;
 }
 
 int get_archive_file_list(const char *archive_name, file_list_t *files) {
-  // TODO: Not yet implemented
   return 0;
 }
 
