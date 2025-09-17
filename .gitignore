@@ -2,6 +2,8 @@
 *.txt
 *.o
 
+testius
+
 test_cases/
 test_files/
 test_results/
