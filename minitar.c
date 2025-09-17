@@ -154,7 +154,7 @@ int create_archive(const char *archive_name, const file_list_t *files) {
       total_bytes += bytes_read;
     }
 
-    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
+    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE));
     if (pad > 0) {
       memset(BUFFER, 0, BLOCK_SIZE);
       write(fd, BUFFER, pad);
