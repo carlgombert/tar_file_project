@@ -29,14 +29,14 @@
  * standard for tar file structure.
  */
 void compute_checksum(tar_header *header) {
-    // Have to initially set header's checksum to "all blanks"
-    memset(header->chksum, ' ', 8);
-    unsigned sum = 0;
-    char *bytes = (char *) header;
-    for (int i = 0; i < sizeof(tar_header); i++) {
-        sum += bytes[i];
-    }
-    snprintf(header->chksum, 8, "%07o", sum);
+  // Have to initially set header's checksum to "all blanks"
+  memset(header->chksum, ' ', 8);
+  unsigned sum = 0;
+  char *bytes = (char *)header;
+  for (int i = 0; i < sizeof(tar_header); i++) {
+    sum += bytes[i];
+  }
+  snprintf(header->chksum, 8, "%07o", sum);
 }
 
 /*
@@ -45,57 +45,61 @@ void compute_checksum(tar_header *header) {
  * Returns 0 on success or -1 if an error occurs
  */
 int fill_tar_header(tar_header *header, const char *file_name) {
-    memset(header, 0, sizeof(tar_header));
-    char err_msg[MAX_MSG_LEN];
-    struct stat stat_buf;
-    // stat is a system call to inspect file metadata
-    if (stat(file_name, &stat_buf) != 0) {
-        snprintf(err_msg, MAX_MSG_LEN, "Failed to stat file %s", file_name);
-        perror(err_msg);
-        return -1;
-    }
+  memset(header, 0, sizeof(tar_header));
+  char err_msg[MAX_MSG_LEN];
+  struct stat stat_buf;
+  // stat is a system call to inspect file metadata
+  if (stat(file_name, &stat_buf) != 0) {
+    snprintf(err_msg, MAX_MSG_LEN, "Failed to stat file %s", file_name);
+    perror(err_msg);
+    return -1;
+  }
 
-    strncpy(header->name, file_name,
-            100);    // Name of the file, null-terminated string
-    snprintf(header->mode, 8, "%07o",
-             stat_buf.st_mode & 07777);    // Permissions for file, 0-padded octal
+  strncpy(header->name, file_name,
+          100); // Name of the file, null-terminated string
+  snprintf(header->mode, 8, "%07o",
+           stat_buf.st_mode & 07777); // Permissions for file, 0-padded octal
 
-    snprintf(header->uid, 8, "%07o",
-             stat_buf.st_uid);                         // Owner ID of the file, 0-padded octal
-    struct passwd *pwd = getpwuid(stat_buf.st_uid);    // Look up name corresponding to owner ID
-    if (pwd == NULL) {
-        snprintf(err_msg, MAX_MSG_LEN, "Failed to look up owner name of file %s", file_name);
-        perror(err_msg);
-        return -1;
-    }
-    strncpy(header->uname, pwd->pw_name,
-            32);    // Owner name of the file, null-terminated string
+  snprintf(header->uid, 8, "%07o",
+           stat_buf.st_uid); // Owner ID of the file, 0-padded octal
+  struct passwd *pwd =
+      getpwuid(stat_buf.st_uid); // Look up name corresponding to owner ID
+  if (pwd == NULL) {
+    snprintf(err_msg, MAX_MSG_LEN, "Failed to look up owner name of file %s",
+             file_name);
+    perror(err_msg);
+    return -1;
+  }
+  strncpy(header->uname, pwd->pw_name,
+          32); // Owner name of the file, null-terminated string
 
-    snprintf(header->gid, 8, "%07o",
-             stat_buf.st_gid);                        // Group ID of the file, 0-padded octal
-    struct group *grp = getgrgid(stat_buf.st_gid);    // Look up name corresponding to group ID
-    if (grp == NULL) {
-        snprintf(err_msg, MAX_MSG_LEN, "Failed to look up group name of file %s", file_name);
-        perror(err_msg);
-        return -1;
-    }
-    strncpy(header->gname, grp->gr_name,
-            32);    // Group name of the file, null-terminated string
+  snprintf(header->gid, 8, "%07o",
+           stat_buf.st_gid); // Group ID of the file, 0-padded octal
+  struct group *grp =
+      getgrgid(stat_buf.st_gid); // Look up name corresponding to group ID
+  if (grp == NULL) {
+    snprintf(err_msg, MAX_MSG_LEN, "Failed to look up group name of file %s",
+             file_name);
+    perror(err_msg);
+    return -1;
+  }
+  strncpy(header->gname, grp->gr_name,
+          32); // Group name of the file, null-terminated string
 
-    snprintf(header->size, 12, "%011o",
-             (unsigned) stat_buf.st_size);    // File size, 0-padded octal
-    snprintf(header->mtime, 12, "%011o",
-             (unsigned) stat_buf.st_mtime);    // Modification time, 0-padded octal
-    header->typeflag = REGTYPE;                // File type, always regular file in this project
-    strncpy(header->magic, MAGIC, 6);          // Special, standardized sequence of bytes
-    memcpy(header->version, "00", 2);          // A bit weird, sidesteps null termination
-    snprintf(header->devmajor, 8, "%07o",
-             major(stat_buf.st_dev));    // Major device number, 0-padded octal
-    snprintf(header->devminor, 8, "%07o",
-             minor(stat_buf.st_dev));    // Minor device number, 0-padded octal
+  snprintf(header->size, 12, "%011o",
+           (unsigned)stat_buf.st_size); // File size, 0-padded octal
+  snprintf(header->mtime, 12, "%011o",
+           (unsigned)stat_buf.st_mtime); // Modification time, 0-padded octal
+  header->typeflag = REGTYPE; // File type, always regular file in this project
+  strncpy(header->magic, MAGIC, 6); // Special, standardized sequence of bytes
+  memcpy(header->version, "00", 2); // A bit weird, sidesteps null termination
+  snprintf(header->devmajor, 8, "%07o",
+           major(stat_buf.st_dev)); // Major device number, 0-padded octal
+  snprintf(header->devminor, 8, "%07o",
+           minor(stat_buf.st_dev)); // Minor device number, 0-padded octal
 
-    compute_checksum(header);
-    return 0;
+  compute_checksum(header);
+  return 0;
 }
 
 /*
@@ -105,80 +109,81 @@ int fill_tar_header(tar_header *header, const char *file_name) {
  * learn about later
  */
 int remove_trailing_bytes(const char *file_name, size_t nbytes) {
-    char err_msg[MAX_MSG_LEN];
+  char err_msg[MAX_MSG_LEN];
 
-    struct stat stat_buf;
-    if (stat(file_name, &stat_buf) != 0) {
-        snprintf(err_msg, MAX_MSG_LEN, "Failed to stat file %s", file_name);
-        perror(err_msg);
-        return -1;
-    }
+  struct stat stat_buf;
+  if (stat(file_name, &stat_buf) != 0) {
+    snprintf(err_msg, MAX_MSG_LEN, "Failed to stat file %s", file_name);
+    perror(err_msg);
+    return -1;
+  }
 
-    off_t file_size = stat_buf.st_size;
-    if (nbytes > file_size) {
-        file_size = 0;
-    } else {
-        file_size -= nbytes;
-    }
+  off_t file_size = stat_buf.st_size;
+  if (nbytes > file_size) {
+    file_size = 0;
+  } else {
+    file_size -= nbytes;
+  }
 
-    if (truncate(file_name, file_size) != 0) {
-        snprintf(err_msg, MAX_MSG_LEN, "Failed to truncate file %s", file_name);
-        perror(err_msg);
-        return -1;
-    }
-    return 0;
+  if (truncate(file_name, file_size) != 0) {
+    snprintf(err_msg, MAX_MSG_LEN, "Failed to truncate file %s", file_name);
+    perror(err_msg);
+    return -1;
+  }
+  return 0;
 }
 
 int create_archive(const char *archive_name, const file_list_t *files) {
-    int fd = open(archive_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    char BUFFER[BLOCK_SIZE];
+  int fd = open(archive_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  char BUFFER[BLOCK_SIZE];
 
-    node_t *current = files->head;
-    while (current != NULL) {
-        const char *file_name = current->name;
-        tar_header header;
+  node_t *current = files->head;
+  while (current != NULL) {
+    const char *file_name = current->name;
+    tar_header header;
 
-        int input_fd = open(file_name, O_RDONLY);
+    int input_fd = open(file_name, O_RDONLY);
 
-        fill_tar_header(&header, file_name);
-        write(fd, &header, BLOCK_SIZE);
-        ssize_t bytes_read;
-        size_t total_bytes;
+    fill_tar_header(&header, file_name);
+    write(fd, &header, BLOCK_SIZE);
+    ssize_t bytes_read;
+    size_t total_bytes = 0;
 
-        while ((bytes_read = read(input_fd, BUFFER, BLOCK_SIZE)) > 0) {
-            write(fd, BUFFER, bytes_read);
-            total_bytes += bytes_read;
-        }
-
-        size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
-        if (pad > 0) {
-            memset(BUFFER, 0, BLOCK_SIZE);
-            write(fd, BUFFER, pad);
-        }
-
-        current = current->next;
+    while ((bytes_read = read(input_fd, BUFFER, BLOCK_SIZE)) > 0) {
+      write(fd, BUFFER, bytes_read);
+      total_bytes += bytes_read;
     }
 
-    memset(BUFFER, 0, BLOCK_SIZE);
-    write(fd, BUFFER, BLOCK_SIZE);
-    write(fd, BUFFER, BLOCK_SIZE);
+    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
+    if (pad > 0) {
+      memset(BUFFER, 0, BLOCK_SIZE);
+      write(fd, BUFFER, pad);
+    }
 
-    close(fd);
-    return 0;
+    current = current->next;
+  }
+
+  memset(BUFFER, 0, BLOCK_SIZE);
+  write(fd, BUFFER, BLOCK_SIZE);
+  write(fd, BUFFER, BLOCK_SIZE);
+
+  close(fd);
+  return 0;
 }
 
-int append_files_to_archive(const char *archive_name, const file_list_t *files) {
-    // TODO: Not yet implemented
-    // to
-    return 0;
+int append_files_to_archive(const char *archive_name,
+                            const file_list_t *files) {
+  // TODO: Not yet implemented
+  // to
+  return 0;
 }
 
 int get_archive_file_list(const char *archive_name, file_list_t *files) {
-    // TODO: Not yet implemented
-    return 0;
+  // TODO: Not yet implemented
+  return 0;
 }
 
 int extract_files_from_archive(const char *archive_name) {
-    // TODO: Not yet implemented
-    return 0;
+  // TODO: Not yet implemented
+  return 0;
 }
