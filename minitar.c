@@ -175,6 +175,8 @@ int append_files_to_archive(const char *archive_name, const file_list_t *files) 
         return -1;
     }
 
+    lseek(fd, BLOCK_SIZE * 2 * -1, SEEK_CUR);
+
     node_t *current = files->head;
     while (current->next != NULL) {
         const char *file_name = current->name;
@@ -200,6 +202,11 @@ int append_files_to_archive(const char *archive_name, const file_list_t *files) 
 
         current = current->next;
     }
+    memset(BUFFER, 0, BLOCK_SIZE);
+    write(fd, BUFFER, BLOCK_SIZE);
+    write(fd, BUFFER, BLOCK_SIZE);
+
+    close(fd);
     return 0;
 }
 
