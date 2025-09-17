@@ -2,7 +2,9 @@
 *.txt
 *.o
 
-
+testius
+minitar
+test.tar
 test_cases/
 test_files/
 test_results/
