@@ -2,5 +2,11 @@
 *.txt
 *.o
 
+<<<<<<< HEAD
+=======
+testius
+
+test_cases/
+>>>>>>> 9cc16fb62da5a262c591fe33fc6a16be2ab2bb15
 test_files/
 test_results/
