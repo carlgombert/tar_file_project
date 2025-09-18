@@ -24,6 +24,14 @@ int main(int argc, char **argv) {
       file_list_add(&files, argv[i]);
     }
     append_files_to_archive(argv[3], &files);
+  } else if (strcmp("-t", argv[1]) == 0) {
+    get_archive_file_list(argv[3], &files);
+    node_t *current = files.head;
+
+    for (int i = 0; i < files.size; i++) {
+      printf("%s\n", current->name);
+      current = current->next;
+    }
   }
 
   file_list_clear(&files);

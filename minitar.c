@@ -5,6 +5,7 @@
 #include <math.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
@@ -180,7 +181,7 @@ int append_files_to_archive(const char *archive_name,
     return -1;
   }
 
-  lseek(fd, BLOCK_SIZE * 2 * -1, SEEK_CUR);
+  lseek(fd, BLOCK_SIZE * 2 * -1, SEEK_END);
 
   node_t *current = files->head;
   while (current != NULL) {
@@ -192,14 +193,14 @@ int append_files_to_archive(const char *archive_name,
     fill_tar_header(&header, file_name);
     write(fd, &header, BLOCK_SIZE);
     ssize_t bytes_read;
-    size_t total_bytes;
+    size_t total_bytes = 0;
 
     while ((bytes_read = read(input_fd, BUFFER, BLOCK_SIZE)) > 0) {
       write(fd, BUFFER, bytes_read);
       total_bytes += bytes_read;
     }
 
-    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
+    size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE));
     if (pad > 0) {
       memset(BUFFER, 0, BLOCK_SIZE);
       write(fd, BUFFER, pad);
@@ -216,6 +217,23 @@ int append_files_to_archive(const char *archive_name,
 }
 
 int get_archive_file_list(const char *archive_name, file_list_t *files) {
+  int fd = open(archive_name, O_RDONLY, 0666);
+  char BUFFER[BLOCK_SIZE];
+  tar_header header;
+
+  off_t end = lseek(fd, BLOCK_SIZE * 2 * -1, SEEK_END);
+  lseek(fd, 0, SEEK_SET);
+
+  while (lseek(fd, 0, SEEK_CUR) < end) {
+    read(fd, BUFFER, BLOCK_SIZE);
+    memcpy(&header, BUFFER, sizeof(tar_header));
+    file_list_add(files, header.name);
+
+    lseek(fd,
+          ((strtol(header.size, NULL, 8) + BLOCK_SIZE - 1) / BLOCK_SIZE) *
+              BLOCK_SIZE,
+          SEEK_CUR);
+  }
   return 0;
 }
 
