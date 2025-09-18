@@ -216,11 +216,12 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
 
 int extract_files_from_archive(const char *archive_name) {
     int fp = open(archive_name, O_WRONLY | O_APPEND, 0666);
-    char BUFFER[BLOCK_SIZE];
+    // char BUFFER[BLOCK_SIZE];
     if (!fp) {
         close(fp);
         return -1;
     }
 
+    close(fp);
     return 0;
 }
