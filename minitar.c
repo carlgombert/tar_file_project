@@ -227,7 +227,9 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
   while (lseek(fd, 0, SEEK_CUR) < end) {
     read(fd, BUFFER, BLOCK_SIZE);
     memcpy(&header, BUFFER, sizeof(tar_header));
-    file_list_add(files, header.name);
+    if (file_list_contains(files, header.name) == 0) {
+      file_list_add(files, header.name);
+    }
 
     lseek(fd,
           ((strtol(header.size, NULL, 8) + BLOCK_SIZE - 1) / BLOCK_SIZE) *
@@ -244,5 +246,31 @@ int extract_files_from_archive(const char *archive_name) {
 
 int update_files_in_archive(const char *archive_name,
                             const file_list_t *files) {
+  file_list_t file_list;
+  file_list_init(&file_list);
+
+  get_archive_file_list(archive_name, &file_list);
+
+  /////////////////////////////////////////////////////////////////////////////
+  /*
+    for (node_t *cur = files->head; cur != NULL; cur = cur->next) {
+      printf("%s\n", cur->name);
+    }
+
+    for (node_t *cur = file_list.head; cur != NULL; cur = cur->next) {
+      printf("%s\n", cur->name);
+    }
+  */
+  /////////////////////////////////////////////////////////////////////////////
+
+  if (file_list_is_subset(files, &file_list) == 0) {
+    printf("Error: One or more of the specified files is not already present "
+           "in archive");
+    file_list_clear(&file_list);
+    return -1;
+  }
+
+  append_files_to_archive(archive_name, files);
+  file_list_clear(&file_list);
   return 0;
 }

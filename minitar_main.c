@@ -32,6 +32,11 @@ int main(int argc, char **argv) {
       printf("%s\n", current->name);
       current = current->next;
     }
+  } else if (strcmp("-u", argv[1]) == 0) {
+    for (int i = 4; i < argc; i++) {
+      file_list_add(&files, argv[i]);
+    }
+    update_files_in_archive(argv[3], &files);
   }
 
   file_list_clear(&files);
