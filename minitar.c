@@ -253,22 +253,24 @@ int append_files_to_archive(const char *archive_name,
 }
 
 int get_archive_file_list(const char *archive_name, file_list_t *files) {
-  int fd = open(archive_name, O_RDONLY, 0666);
-  if (fd == -1) {
+  FILE *fd = fopen(archive_name, "rb");
+  if (fd == NULL) {
     perror("Error opening archive file");
     return 1;
   }
+
   char BUFFER[BLOCK_SIZE];
   tar_header header;
 
-  off_t end = lseek(fd, BLOCK_SIZE * 2 * -1, SEEK_END);
-  lseek(fd, 0, SEEK_SET);
+  fseek(fd, BLOCK_SIZE * 2 * -1, SEEK_END);
+  off_t end = ftell(fd);
+  fseek(fd, 0, SEEK_SET);
 
-  while (lseek(fd, 0, SEEK_CUR) < end) {
-    ssize_t bytes_read = read(fd, BUFFER, BLOCK_SIZE);
-    if (bytes_read == -1) {
+  while (ftell(fd) < end) {
+    ssize_t bytes_read = fread(BUFFER, 1, BLOCK_SIZE, fd);
+    if (bytes_read == 0) {
       perror("Error reading tar header from archive");
-      close(fd);
+      fclose(fd);
       return 1;
     }
     memcpy(&header, BUFFER, sizeof(tar_header));
@@ -276,11 +278,12 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
       file_list_add(files, header.name);
     }
 
-    lseek(fd,
+    fseek(fd,
           ((strtol(header.size, NULL, 8) + BLOCK_SIZE - 1) / BLOCK_SIZE) *
               BLOCK_SIZE,
           SEEK_CUR);
   }
+  fclose(fd);
   return 0;
 }
 
