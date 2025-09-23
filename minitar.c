@@ -135,7 +135,11 @@ int remove_trailing_bytes(const char *file_name, size_t nbytes) {
 }
 
 int create_archive(const char *archive_name, const file_list_t *files) {
-  int fd = open(archive_name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  FILE *arc_fp = fopen(archive_name, "wb");
+  if (arc_fp == NULL) {
+    perror("Error opening archive file");
+    return 1;
+  }
   char BUFFER[BLOCK_SIZE];
 
   node_t *current = files->head;
@@ -143,32 +147,64 @@ int create_archive(const char *archive_name, const file_list_t *files) {
     const char *file_name = current->name;
     tar_header header;
 
-    int input_fd = open(file_name, O_RDONLY);
+    FILE *input_fp = fopen(file_name, "rb");
+    if (input_fp == NULL) {
+      perror("Error opening input file");
+      fclose(arc_fp);
+      return 1;
+    }
 
     fill_tar_header(&header, file_name);
-    write(fd, &header, BLOCK_SIZE);
+
+    if (fwrite(&header, BLOCK_SIZE, 1, arc_fp) != 1) {
+      perror("Error writing header");
+      fclose(arc_fp);
+      fclose(input_fp);
+      return 1;
+    }
+
     ssize_t bytes_read;
     size_t total_bytes = 0;
 
-    while ((bytes_read = read(input_fd, BUFFER, BLOCK_SIZE)) > 0) {
-      write(fd, BUFFER, bytes_read);
+    while ((bytes_read = fread(BUFFER, 1, BLOCK_SIZE, input_fp)) > 0) {
+      if (fwrite(BUFFER, bytes_read, 1, arc_fp) != 1) {
+        perror("Error writing data");
+        fclose(arc_fp);
+        fclose(input_fp);
+        return 1;
+      }
       total_bytes += bytes_read;
+    }
+    if (ferror(input_fp)) {
+      perror("Error reading from input file");
+      fclose(arc_fp);
+      fclose(input_fp);
+      return 1;
     }
 
     size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
     if (pad > 0) {
       memset(BUFFER, 0, BLOCK_SIZE);
-      write(fd, BUFFER, pad);
+      if (fwrite(BUFFER, pad, 1, arc_fp) != 1) {
+        perror("Error writing padding to archive");
+        fclose(arc_fp);
+        fclose(input_fp);
+        return 1;
+      }
     }
-
+    fclose(input_fp);
     current = current->next;
   }
 
   memset(BUFFER, 0, BLOCK_SIZE);
-  write(fd, BUFFER, BLOCK_SIZE);
-  write(fd, BUFFER, BLOCK_SIZE);
+  if (fwrite(BUFFER, BLOCK_SIZE, 1, arc_fp) != 1 ||
+      fwrite(BUFFER, BLOCK_SIZE, 1, arc_fp) != 1) {
+    perror("Error writing final null blocks");
+    fclose(arc_fp);
+    return 1;
+  }
 
-  close(fd);
+  fclose(arc_fp);
   return 0;
 }
 
@@ -218,6 +254,10 @@ int append_files_to_archive(const char *archive_name,
 
 int get_archive_file_list(const char *archive_name, file_list_t *files) {
   int fd = open(archive_name, O_RDONLY, 0666);
+  if (fd == -1) {
+    perror("Error opening archive file");
+    return 1;
+  }
   char BUFFER[BLOCK_SIZE];
   tar_header header;
 
@@ -225,7 +265,12 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
   lseek(fd, 0, SEEK_SET);
 
   while (lseek(fd, 0, SEEK_CUR) < end) {
-    read(fd, BUFFER, BLOCK_SIZE);
+    ssize_t bytes_read = read(fd, BUFFER, BLOCK_SIZE);
+    if (bytes_read == -1) {
+      perror("Error reading tar header from archive");
+      close(fd);
+      return 1;
+    }
     memcpy(&header, BUFFER, sizeof(tar_header));
     if (file_list_contains(files, header.name) == 0) {
       file_list_add(files, header.name);
