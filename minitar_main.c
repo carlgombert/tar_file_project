@@ -17,26 +17,40 @@ int main(int argc, char **argv) {
     for (int i = 4; i < argc; i++) {
       file_list_add(&files, argv[i]);
     }
-    create_archive(argv[3], &files);
+    if (create_archive(argv[3], &files)) {
+      file_list_clear(&files);
+      return 1;
+    }
 
   } else if (strcmp("-a", argv[1]) == 0) {
     for (int i = 4; i < argc; i++) {
       file_list_add(&files, argv[i]);
     }
-    append_files_to_archive(argv[3], &files);
+    if (append_files_to_archive(argv[3], &files)) {
+      file_list_clear(&files);
+      return 1;
+    }
+
   } else if (strcmp("-t", argv[1]) == 0) {
-    get_archive_file_list(argv[3], &files);
+    if (get_archive_file_list(argv[3], &files)) {
+      file_list_clear(&files);
+      return 1;
+    }
     node_t *current = files.head;
 
     for (int i = 0; i < files.size; i++) {
       printf("%s\n", current->name);
       current = current->next;
     }
+
   } else if (strcmp("-u", argv[1]) == 0) {
     for (int i = 4; i < argc; i++) {
       file_list_add(&files, argv[i]);
     }
-    update_files_in_archive(argv[3], &files);
+    if (update_files_in_archive(argv[3], &files)) {
+      file_list_clear(&files);
+      return 1;
+    }
   }
 
   file_list_clear(&files);

@@ -134,6 +134,11 @@ int remove_trailing_bytes(const char *file_name, size_t nbytes) {
   return 0;
 }
 
+/*
+ * creates archive "archive name" with files in files
+ * returns 0 upon success and 1 upon failure
+ * creates archive object
+ */
 int create_archive(const char *archive_name, const file_list_t *files) {
   FILE *arc_fp = fopen(archive_name, "wb");
   if (arc_fp == NULL) {
@@ -143,7 +148,7 @@ int create_archive(const char *archive_name, const file_list_t *files) {
   char BUFFER[BLOCK_SIZE];
 
   node_t *current = files->head;
-  while (current != NULL) {
+  while (current != NULL) { // goes file by file
     const char *file_name = current->name;
     tar_header header;
 
@@ -154,7 +159,7 @@ int create_archive(const char *archive_name, const file_list_t *files) {
       return 1;
     }
 
-    fill_tar_header(&header, file_name);
+    fill_tar_header(&header, file_name); // writes header for file
 
     if (fwrite(&header, BLOCK_SIZE, 1, arc_fp) != 1) {
       perror("Error writing header");
@@ -167,7 +172,8 @@ int create_archive(const char *archive_name, const file_list_t *files) {
     size_t total_bytes = 0;
 
     while ((bytes_read = fread(BUFFER, 1, BLOCK_SIZE, input_fp)) > 0) {
-      if (fwrite(BUFFER, bytes_read, 1, arc_fp) != 1) {
+      if (fwrite(BUFFER, bytes_read, 1, arc_fp) ==
+          0) { // loops through block size and copies charecters
         perror("Error writing data");
         fclose(arc_fp);
         fclose(input_fp);
@@ -183,7 +189,7 @@ int create_archive(const char *archive_name, const file_list_t *files) {
     }
 
     size_t pad = (BLOCK_SIZE - (total_bytes % BLOCK_SIZE)) % BLOCK_SIZE;
-    if (pad > 0) {
+    if (pad > 0) { // writes pad to archive
       memset(BUFFER, 0, BLOCK_SIZE);
       if (fwrite(BUFFER, pad, 1, arc_fp) != 1) {
         perror("Error writing padding to archive");
@@ -196,7 +202,7 @@ int create_archive(const char *archive_name, const file_list_t *files) {
     current = current->next;
   }
 
-  memset(BUFFER, 0, BLOCK_SIZE);
+  memset(BUFFER, 0, BLOCK_SIZE); // writes end blocks to archive
   if (fwrite(BUFFER, BLOCK_SIZE, 1, arc_fp) != 1 ||
       fwrite(BUFFER, BLOCK_SIZE, 1, arc_fp) != 1) {
     perror("Error writing final null blocks");
@@ -252,6 +258,11 @@ int append_files_to_archive(const char *archive_name,
   return 0;
 }
 
+/*
+ * creates a list of all files contained in the archive
+ * returns 0 upon success and 1 upon failure
+ * takes archive name and empty files list, add to files list
+ */
 int get_archive_file_list(const char *archive_name, file_list_t *files) {
   FILE *fd = fopen(archive_name, "rb");
   if (fd == NULL) {
