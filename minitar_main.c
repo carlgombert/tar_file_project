@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
   file_list_t files;
   file_list_init(&files);
 
-  if (strcmp("-c", argv[1]) == 0) {
-    for (int i = 4; i < argc; i++) {
+  if (strcmp("-c", argv[1]) == 0) {  // create archive handling
+    for (int i = 4; i < argc; i++) { // grabs all files
       file_list_add(&files, argv[i]);
     }
     if (create_archive(argv[3], &files)) {
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  } else if (strcmp("-a", argv[1]) == 0) {
+  } else if (strcmp("-a", argv[1]) == 0) { // append file handling
     for (int i = 4; i < argc; i++) {
       file_list_add(&files, argv[i]);
     }
@@ -31,29 +31,29 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-  } else if (strcmp("-t", argv[1]) == 0) {
+  } else if (strcmp("-t", argv[1]) == 0) { // file name list handling
     if (get_archive_file_list(argv[3], &files)) {
       file_list_clear(&files);
       return 1;
     }
     node_t *current = files.head;
 
-    for (int i = 0; i < files.size; i++) {
+    for (int i = 0; i < files.size; i++) { // prints all files names
       printf("%s\n", current->name);
       current = current->next;
     }
 
-  } else if (strcmp("-u", argv[1]) == 0) {
+  } else if (strcmp("-u", argv[1]) == 0) { // update archive handling
     for (int i = 4; i < argc; i++) {
       file_list_add(&files, argv[i]);
     }
-    if (update_files_in_archive(argv[3], &files)) {
+    if (update_files_in_archive(argv[3], &files)) { // error check
       file_list_clear(&files);
       return 1;
     }
   }
 
-  file_list_clear(&files);
+  file_list_clear(&files); // clears file list and exits
   return 0;
 }
 
