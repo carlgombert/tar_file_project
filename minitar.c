@@ -273,9 +273,10 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
   char BUFFER[BLOCK_SIZE];
   tar_header header;
 
-  fseek(fd, BLOCK_SIZE * 2 * -1, SEEK_END);
+  fseek(fd, BLOCK_SIZE * 2 * -1,
+        SEEK_END); // finds end of file then steps back to last block of data
   off_t end = ftell(fd);
-  fseek(fd, 0, SEEK_SET);
+  fseek(fd, 0, SEEK_SET); // resets to front
 
   while (ftell(fd) < end) {
     ssize_t bytes_read = fread(BUFFER, 1, BLOCK_SIZE, fd);
@@ -284,15 +285,16 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
       fclose(fd);
       return 1;
     }
-    memcpy(&header, BUFFER, sizeof(tar_header));
+    memcpy(&header, BUFFER, sizeof(tar_header)); // copies header to local
+                                                 // struct
     if (file_list_contains(files, header.name) == 0) {
-      file_list_add(files, header.name);
+      file_list_add(files, header.name); // adds headers name from local struct
     }
 
     fseek(fd,
           ((strtol(header.size, NULL, 8) + BLOCK_SIZE - 1) / BLOCK_SIZE) *
               BLOCK_SIZE,
-          SEEK_CUR);
+          SEEK_CUR); // skips to start of next struct
   }
   fclose(fd);
   return 0;
@@ -322,14 +324,15 @@ int update_files_in_archive(const char *archive_name,
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  if (file_list_is_subset(files, &file_list) == 0) {
+  if (file_list_is_subset(files, &file_list) ==
+      0) { // checks all files are present
     printf("Error: One or more of the specified files is not already present "
            "in archive");
     file_list_clear(&file_list);
     return -1;
   }
 
-  append_files_to_archive(archive_name, files);
+  append_files_to_archive(archive_name, files); // adds files to archive
   file_list_clear(&file_list);
   return 0;
 }
