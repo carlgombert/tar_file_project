@@ -10,8 +10,8 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  file_list_t files;
-  file_list_init(&files);
+  file_list_t files;      // all files!
+  file_list_init(&files); // init
 
   if (strcmp("-c", argv[1]) == 0) {  // create archive handling
     for (int i = 4; i < argc; i++) { // grabs all files

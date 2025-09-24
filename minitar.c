@@ -214,6 +214,11 @@ int create_archive(const char *archive_name, const file_list_t *files) {
   return 0;
 }
 
+/*
+ * appends files to archive
+ * opens archive, appends all files regardless of contained or not
+ * returns 0 upon success, 1 upon failure.
+ */
 int append_files_to_archive(const char *archive_name,
                             const file_list_t *files) {
   int fd = open(archive_name, O_WRONLY | O_APPEND, 0666);
@@ -231,6 +236,10 @@ int append_files_to_archive(const char *archive_name,
     tar_header header;
 
     int input_fd = open(file_name, O_RDONLY);
+    if (!fd) {
+      close(fd);
+      return -1;
+    }
 
     fill_tar_header(&header, file_name);
     write(fd, &header, BLOCK_SIZE);
