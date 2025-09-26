@@ -47,10 +47,19 @@ int main(int argc, char **argv) {
     for (int i = 4; i < argc; i++) {
       file_list_add(&files, argv[i]);
     }
-    if (update_files_in_archive(argv[3], &files)) { // error check
+    file_list_t file_list;
+    file_list_init(&file_list);
+
+    get_archive_file_list(argv[3], &file_list);
+    if (file_list_is_subset(&files, &file_list) == 0) {
+      printf("Error: One or more of the specified files is not already present "
+             "in archive");
+      file_list_clear(&file_list);
       file_list_clear(&files);
       return 1;
     }
+    append_files_to_archive(argv[3], &files); // adds files to archive
+    file_list_clear(&file_list);
   }
 
   file_list_clear(&files); // clears file list and exits
