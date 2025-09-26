@@ -300,9 +300,10 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
       file_list_add(files, header.name); // adds headers name from local struct
     }
 
-    fseek(fd,
-          ((strtol(header.size, NULL, 8) + BLOCK_SIZE - 1) / BLOCK_SIZE) *
-              BLOCK_SIZE,
+    long file_size = strtol(header.size, NULL, 8);
+    long data_blocks = (file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    fseek(fd, (data_blocks)*BLOCK_SIZE,
           SEEK_CUR); // skips to start of next struct
   }
   fclose(fd);
@@ -310,7 +311,52 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
 }
 
 int extract_files_from_archive(const char *archive_name) {
-  // TODO: Not yet implemented
+  FILE *fd = fopen(archive_name, "rb");
+  if (fd == NULL) {
+    perror("Error opening archive file");
+    return 1;
+  }
+
+  char BUFFER[BLOCK_SIZE];
+  tar_header header;
+
+  fseek(fd, BLOCK_SIZE * 2 * -1,
+        SEEK_END); // finds end of file then steps back to last block of data
+  off_t end = ftell(fd);
+  fseek(fd, 0, SEEK_SET); // resets to front
+
+  while (ftell(fd) < end) {
+    ssize_t bytes_read = fread(BUFFER, 1, BLOCK_SIZE, fd);
+    if (bytes_read == 0) {
+      perror("Error reading tar header from archive");
+      fclose(fd);
+      return 1;
+    }
+    memcpy(&header, BUFFER, sizeof(tar_header));
+
+    long file_size = strtol(header.size, NULL, 8);
+    long data_blocks = (file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    FILE *output_fd = fopen(header.name, "wb");
+    if (output_fd == NULL) {
+      perror("Error creating output file");
+      fclose(fd);
+      return 1;
+    }
+
+    long bytes_written = 0;
+    for (long i = 0; i < data_blocks; i++) {
+      fread(BUFFER, 1, BLOCK_SIZE, fd);
+      size_t bytes_to_write = BLOCK_SIZE;
+      if (bytes_written + BLOCK_SIZE > file_size) {
+        bytes_to_write = file_size - bytes_written;
+      }
+      fwrite(BUFFER, 1, bytes_to_write, output_fd);
+      bytes_written += bytes_to_write;
+    }
+    fclose(output_fd);
+  }
+  fclose(fd);
   return 0;
 }
 
