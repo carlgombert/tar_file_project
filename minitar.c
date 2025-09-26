@@ -371,7 +371,7 @@ int extract_files_from_archive(const char *archive_name) {
  * checks to make sure all files to update are in archive
  * takes archive name, file list
  * uses provided and programmed functions
- */
+ *
 int update_files_in_archive(const char *archive_name,
                             const file_list_t *files) {
   file_list_t file_list;
@@ -380,7 +380,7 @@ int update_files_in_archive(const char *archive_name,
   get_archive_file_list(archive_name, &file_list);
 
   /////////////////////////////////////////////////////////////////////////////
-  /*
+
     for (node_t *cur = files->head; cur != NULL; cur = cur->next) {
       printf("%s\n", cur->name);
     }
@@ -388,7 +388,7 @@ int update_files_in_archive(const char *archive_name,
     for (node_t *cur = file_list.head; cur != NULL; cur = cur->next) {
       printf("%s\n", cur->name);
     }
-  */
+
   /////////////////////////////////////////////////////////////////////////////
 
   if (file_list_is_subset(files, &file_list) ==
@@ -403,3 +403,4 @@ int update_files_in_archive(const char *archive_name,
   file_list_clear(&file_list);
   return 0;
 }
+*/
