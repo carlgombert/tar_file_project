@@ -1,3 +1,5 @@
+// peter mckinley and carl gombert
+
 #include "minitar.h"
 
 #include <fcntl.h>
@@ -310,6 +312,11 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
   return 0;
 }
 
+/*
+ *extratcs all files from archive
+ * takes archive name, updates files in folder
+ * returns 0 on success, 1 on failure
+ */
 int extract_files_from_archive(const char *archive_name) {
   FILE *fd = fopen(archive_name, "rb");
   if (fd == NULL) {
