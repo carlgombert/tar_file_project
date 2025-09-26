@@ -314,6 +314,11 @@ int extract_files_from_archive(const char *archive_name) {
   return 0;
 }
 
+/*
+ * checks to make sure all files to update are in archive
+ * takes archive name, file list
+ * uses provided and programmed functions
+ */
 int update_files_in_archive(const char *archive_name,
                             const file_list_t *files) {
   file_list_t file_list;
